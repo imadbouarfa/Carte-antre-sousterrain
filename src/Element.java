@@ -1,5 +1,13 @@
 import java.awt.*;
-
+/**
+ * Cette classe représente un programme générant la carte d’un antre sousterrain
+ *
+ * @author Imad Bouarfa
+ * Code permanent: BOUI24039303
+ * Courriel: bouarfa.imad@courrier.uqam.ca
+ * Cours: INF2120-010
+ * @version 2023-02-17
+ */
 public abstract class Element {
     private Point position;
     private int base;
@@ -61,5 +69,6 @@ public abstract class Element {
     public void deplacerHaut(){
         this.position.y--;
     }
+
 
 }
