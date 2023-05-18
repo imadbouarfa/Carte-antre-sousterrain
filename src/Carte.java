@@ -2,8 +2,14 @@ import java.awt.*;
 import java.io.*;
 import java.util.*;
 import java.io.File;
-import java.util.List;
-
+/**
+ * Cette classe représente un programme générant la carte d’un antre sousterrain
+ *
+ * @author Imad Shaker Bouarfa
+ * Courriel: bouarfa.imad@courrier.uqam.ca
+ * Cours: INF2120-010
+ * @version 2023-02-17
+ */
 public class Carte {
     private String[][] matrice;
 
@@ -23,6 +29,13 @@ public class Carte {
         this.matrice = remplireMatrice(fileName);
     }
 
+    /**
+     * Remplir la carte avec caractères et vérifier le nombre d'echecs
+     *
+     * @param fileName Prend le fichier text contenant les dimensions des pieces
+     *
+     * @return
+     */
     private String[][] remplireMatrice(String fileName) {
         String[][] m = null;
         try {
@@ -30,12 +43,13 @@ public class Carte {
 
             m = remplireMatriceAvecCasesPleines(scanner);
 
-            placerPieceCentrale(m, scanner);
+            boolean pieceCentralePlacer = placerPieceCentrale(m, scanner);
 
-            lirePiecesLibres(scanner);
-
-            while (echec<100 && piecesLibres.size()>0){
-                placerPieceAuHasard(m);
+            if (pieceCentralePlacer){
+                lirePiecesLibres(scanner);
+                while (echec<100 && piecesLibres.size()>0){
+                    placerPieceAuHasard(m);
+                }
             }
 
         } catch (FileNotFoundException e) {
@@ -46,14 +60,19 @@ public class Carte {
 
     }
 
+    /**
+     * Placer les pieces au hasard dans la map et verifie que les pieces ne se touchent pas
+     *
+     * @param m Prend en parametre la map remplie avec des cases pleines
+     */
     private void placerPieceAuHasard(String[][] m) {
-        int indexPieceSurCarte = new Random().nextInt(piecesSurCarte.size());
-        Piece pieceSurCarte = piecesSurCarte.get(indexPieceSurCarte);
-        int indexMur = new Random().nextInt(pieceSurCarte.murs().length);
-        Mur mur = pieceSurCarte.murs()[indexMur];
+        Piece pieceSurCarte = piecesSurCarte.get(new Random().nextInt(piecesSurCarte.size()));
+        Mur mur;
+        do{
+            mur = pieceSurCarte.getMurs()[new Random().nextInt(pieceSurCarte.getMurs().length)];
+        } while (!mursLibres.contains(mur));
 
-        int indexPiece = new Random().nextInt(piecesLibres.size());
-        Piece piece = this.piecesLibres.get(indexPiece);
+        Piece piece = this.piecesLibres.get(new Random().nextInt(piecesLibres.size()));
 
         Point porteMur = new Point(new Random().nextInt(mur.getBase()), new Random().nextInt(mur.getHauteur()));
         Point portePiece = new Point(new Random().nextInt(piece.getBase()), new Random().nextInt(piece.getHauteur()));
@@ -74,7 +93,7 @@ public class Carte {
 
 
         piece.setPosition(new Point(xPiece, yPiece));
-        piece.getMurs();
+
 
         while(piece.enConflit(pieceSurCarte)){
             deplacer(mur,piece,pieceSurCarte);
@@ -86,16 +105,42 @@ public class Carte {
         if (!piece.horsCarte(m) && bienPlace){
             piecesSurCarte.add(piece);
             piecesLibres.remove(piece);
-            mursLibres.addAll(List.of(piece.getMurs()));
+            addMursPiece(mur, piece);
             mursLibres.remove(mur);
-            updateMatrice(m, xPorte, yPorte, mur);
+            updateMatrice(m, xPorte, yPorte, mur, pieceSurCarte);
         } else {
             echec++;
+            piece.setPosition(new Point(0,0));
         }
 
 
     }
 
+    /**
+     * Ajouter les murs aux pieces
+     *
+     * @param mur   Prend en parametre les dimensions des murs
+     * @param piece Prend en parametre les dimensions des pieces
+     */
+    private void addMursPiece(Mur mur, Piece piece) {
+        Mur[] mursDeLaPiece = piece.creerMurs();
+        for (Mur m : mursDeLaPiece){
+            if(m.getBase()==1 && mur.getBase()==1 && m.getX()!=mur.getX()){
+                this.mursLibres.add(m);
+            } else if (m.getHauteur()==1 && mur.getHauteur()==1 && m.getY()!=mur.getY()){
+                this.mursLibres.add(m);
+            } else {
+                this.mursLibres.add(m);
+            }
+        }
+    }
+
+    /**
+     * Verifie que la piece n'est pas en conflit avec une autre
+     *
+     * @param piece Prend en parametre les dimensions de la piece
+     * @return
+     */
     private boolean pieceEstBienPlace(Piece piece) {
         boolean bienPlace = true;
         for (Piece p : piecesSurCarte){
@@ -106,23 +151,44 @@ public class Carte {
         return bienPlace;
     }
 
+    /**
+     *Effectue le deplacement des pieces
+     *
+     * @param mur Prend en parametre les dimensions des murs
+     * @param piece Prend en parametre les dimensions des pieces
+     * @param p
+     */
     private void deplacer(Mur mur, Piece piece, Piece p) {
-        if(mur.getBase()==1){//mur vertical ==> déplacement à gauche ou à droite
-            if(piece.getX()< p.getX()){ //piece a gauche de p
+        if(mur.getY()==p.getY()){
+            //mur vertical ==> déplacement à gauche ou à droite
+            if(piece.getX()< p.getX()){
+                //piece a gauche de p
                 piece.deplacerGauche();
             } else {
                 piece.deplacerDroit();
             }
-        } else { //mur horizental ==> déplacement en haut ou en bas
-            if (piece.getY()< p.getY()){ //piece au dessus de p
+        } else {
+            //mur horizental ==> déplacement en haut ou en bas
+            if (piece.getY()< p.getY()){
+                //piece au dessus de p
                 piece.deplacerHaut();
-            } else { //piece au dessous de p
+            } else {
+                //piece au dessous de p
                 piece.deplacerBas();
             }
         }
     }
 
-    private void updateMatrice(String[][] m, int xPorte, int yPorte, Mur mur) {
+    /**
+     * Mettre a jour la map avec des caracteres
+     *
+     * @param m Prend en parametre la map remplie avec des cases pleines
+     * @param xPorte Prend en parametre les positions de la porte
+     * @param yPorte Prend en parametre les positions de la porte
+     * @param mur Prend en parametre la position des murs
+     * @param pieceSurCarte Prend en parametre les pieces sur la carte
+     */
+    private void updateMatrice(String[][] m, int xPorte, int yPorte, Mur mur, Piece pieceSurCarte) {
         for (Piece piece : piecesSurCarte){
             for (int i=piece.getX(); i<piece.getX()+piece.getBase(); i++){
                 for (int j=piece.getY(); j<piece.getY()+piece.getHauteur(); j++){
@@ -131,14 +197,20 @@ public class Carte {
             }
         }
 
-        if (mur.getBase()==1){ //mur vertical donc porte |
-            m[xPorte][yPorte] = "|";
-        } else { //mur horizental donc porte -
+        if (mur.getX()==pieceSurCarte.getX()){ //mur horizontal donc porte -
             m[xPorte][yPorte] = "-";
+        } else {
+            //mur vertical donc porte |
+            m[xPorte][yPorte] = "|";
         }
 
     }
 
+    /**
+     * Lecture des pieces non utilisées
+     *
+     * @param scanner Prend en parametre le fichier text
+     */
     private void lirePiecesLibres(Scanner scanner) {
         while (scanner.hasNext()){
             int base = scanner.nextInt();
@@ -148,6 +220,12 @@ public class Carte {
         }
     }
 
+    /**
+     * Remplie la carte avec le caractere 'O'
+     *
+     * @param scanner Prend en parametre le fichier text
+     * @return
+     */
     private String[][] remplireMatriceAvecCasesPleines(Scanner scanner) {
         String[][] m;
         int base = scanner.nextInt();
@@ -161,11 +239,22 @@ public class Carte {
         return m;
     }
 
-    private void placerPieceCentrale(String[][] m, Scanner scanner) {
+    /**
+     * Placer la piece centrale
+     *
+     * @param m Prend en parametre la map remplie avec des cases pleines
+     * @param scanner Prend en parametre le fichier text
+     * @return
+     */
+    private boolean placerPieceCentrale(String[][] m, Scanner scanner) {
         int basePC = scanner.nextInt();
         int hauteurPC = scanner.nextInt();
         int x = (m.length-basePC)/2;
         int y = (m[0].length-hauteurPC)/2;
+
+        if (basePC>m.length || hauteurPC>m[0].length){
+            return false;
+        }
 
         Piece pieceCentrale = new Piece(x, y, basePC, hauteurPC);
 
@@ -176,13 +265,16 @@ public class Carte {
         }
         piecesSurCarte.add(pieceCentrale);
 
-        Mur[] mursPieceCentrale = pieceCentrale.getMurs();
+        Mur[] mursPieceCentrale = pieceCentrale.creerMurs();
         for (Mur mur : mursPieceCentrale){
             mursLibres.add(mur);
         }
-
+        return true;
     }
 
+    /**
+     * Dessine la carte
+     */
     public void dessiner() {
         for (int j = 0; j < matrice[0].length; j++) {
             for (int i = 0; i < matrice.length; i++) {
