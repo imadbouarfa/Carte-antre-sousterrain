@@ -1,6 +1,6 @@
 # Carte-antre-sousterrain
 
-# Description du project
+# Description du projet
 Le projet est un programme qui génère la carte d’un antre sousterrain. Ce programme lit l’information dans un fichier décrivant la taille des pièces à placer dans le sousterrain et ensuite place ces pièces aléatoirement. Le résultat est affiché à l’écran, à l’aide de caractères.
 
 ## Authors
