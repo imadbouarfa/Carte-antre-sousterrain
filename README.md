@@ -4,7 +4,7 @@
 Le projet est un programme qui génère la carte d’un antre sousterrain. Ce programme lit l’information dans un fichier décrivant la taille des pièces à placer dans le sousterrain et ensuite place ces pièces aléatoirement. Le résultat est affiché à l’écran, à l’aide de caractères.
 
 ## Authors
-[@Shaker, Imad](https://gitlab.info.uqam.ca/bouarfa.imad)
+[@Bouarfa, Imad](https://gitlab.info.uqam.ca/bouarfa.imad)
 
 ## Technologies
 * IntelliJ IDEA (https://www.jetbrains.com/idea/)
